@@ -1,0 +1,30 @@
+# ConvertFlow — Python Dependencies
+# Pin minor versions for reproducibility; patch versions can float.
+
+# ── Web Framework ──────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9      # Required for UploadFile / form data
+
+# ── Database ───────────────────────────────────────────────────
+sqlalchemy==2.0.30
+aiosqlite==0.20.0            # Async SQLite driver (optional but nice)
+
+# ── Auth & Security ────────────────────────────────────────────
+python-jose[cryptography]==3.3.0   # JWT encode/decode (HS256)
+passlib[bcrypt]==1.7.4             # bcrypt password hashing
+bcrypt==3.2.2                      # pin bcrypt to compatible version
+
+# ── File Conversion ────────────────────────────────────────────
+pdf2docx==0.5.8              # PDF → DOCX layout reconstruction
+python-docx==1.1.2           # DOCX creation / manipulation
+python-pptx==0.6.23          # PPTX parsing for slide rendering
+openpyxl==3.1.5              # XLSX reading / simple export
+PyPDF2==3.0.1                # Basic PDF merge/split/rotate/encrypt
+borb==2.1.24                 # Advanced PDF operations (optional)
+pdf2image==1.17.0            # PDF pages → Pillow images (requires poppler)
+Pillow==10.3.0               # Image handling & image↔PDF conversions
+
+# ── Utilities ──────────────────────────────────────────────────
+python-dotenv==1.0.1         # Load .env files in development
+aiofiles==23.2.1             # Async file I/O helpers

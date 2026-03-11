@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────
+#  ConvertFlow — Docker Compose
+#  Services: backend (FastAPI) + frontend (React/Nginx)
+#  Volumes:   uploads, outputs, and sqlite db are persisted
+# ─────────────────────────────────────────────────────────────────
+
+services:
+  # ── Backend ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: convertflow_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist uploaded originals, converted outputs, and the SQLite DB
+      - uploads_data:/app/uploads
+      - outputs_data:/app/outputs
+      - db_data:/app/db
+    environment:
+      # IMPORTANT: Change SECRET_KEY in production!
+      - SECRET_KEY=change-this-in-production-use-a-long-random-string
+      - DATABASE_URL=sqlite:////app/db/convertflow.db
+      - ENVIRONMENT=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Frontend ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: convertflow_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# ── Named Volumes ──────────────────────────────────────────────
+volumes:
+  uploads_data:    # Original uploaded files (scoped per user via UUID prefix)
+  outputs_data:    # Converted output files (docx, jpg, zip)
+  db_data:         # SQLite database file
