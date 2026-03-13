@@ -55,6 +55,50 @@ function FileTypeIcon({ type }) {
   return <FileText size={16} className="text-slate-400 shrink-0" />;
 }
 
+// ── File type dropdown (custom list so it’s not white) ──────────────────────────
+function FileTypeDropdown({ value, options, onChange, "aria-label": ariaLabel }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
+  return (
+    <div ref={ref} className="relative w-20">
+      <button
+        type="button"
+        className="select-field w-full flex items-center justify-between gap-1"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        <span>.{value}</span>
+        <ChevronDown size={12} className="shrink-0 opacity-70" />
+      </button>
+      {open && (
+        <ul
+          className="file-type-dropdown-list"
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li key={opt} role="option" aria-selected={opt === value}>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 text-xs font-mono rounded-md text-slate-200 hover:bg-cyan-400/20 hover:text-cyan-100 focus:bg-cyan-400/20 focus:text-cyan-100 focus:outline-none"
+                onClick={() => { onChange(opt); setOpen(false); }}
+              >
+                .{opt}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ── Notes sub-component ────────────────────────────────────────────────────────
 
 function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
@@ -572,33 +616,26 @@ export default function FileConverter({ username, onLogout }) {
             </div>
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-500 font-mono">Convert</span>
-              <select
-                className="input-field px-2 py-1 text-xs w-20"
+              <FileTypeDropdown
                 value={sourceExt}
-                onChange={e => {
-                  const src = e.target.value;
+                options={sourceOptions}
+                onChange={(src) => {
                   setSourceExt(src);
                   const allowed = formats[src] || [];
                   if (allowed.length && !allowed.includes(targetExt)) {
                     setTargetExt(allowed[0]);
                   }
                 }}
-              >
-                {sourceOptions.map(src => (
-                  <option key={src} value={src}>.{src}</option>
-                ))}
-              </select>
+                aria-label="Source file type"
+              />
               <span className="text-slate-500 font-mono">to</span>
               {targetOptions.length > 0 && (
-                <select
-                  className="input-field px-2 py-1 text-xs w-20"
+                <FileTypeDropdown
                   value={targetExt}
-                  onChange={e => setTargetExt(e.target.value)}
-                >
-                  {targetOptions.map(tgt => (
-                    <option key={tgt} value={tgt}>.{tgt}</option>
-                  ))}
-                </select>
+                  options={targetOptions}
+                  onChange={setTargetExt}
+                  aria-label="Target file type"
+                />
               )}
             </div>
           </div>

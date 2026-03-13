@@ -83,6 +83,12 @@
     color: #e5f6ff;            /* soft cyan-tinted light text */
   }
 
+  /* Custom file-type dropdown list (dark, not white) */
+  .file-type-dropdown-list {
+    @apply absolute z-50 mt-1 w-full rounded-lg border border-cyan-400/40
+           bg-slate-900 shadow-lg py-1 max-h-48 overflow-y-auto;
+  }
+
   /* Status pill badge */
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium;
