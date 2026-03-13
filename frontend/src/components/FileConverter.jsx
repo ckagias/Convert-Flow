@@ -271,9 +271,9 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
             <StatusBadge status={file.status} />
             <span className="text-slate-600 text-[11px] font-mono">{formatDate(file.created_at)}</span>
             <span className="text-slate-600 text-[10px] font-mono uppercase tracking-wider">
-              {file.file_type} →{" "}
-              {file.file_type === "pdf"  && "docx"}
-              {file.file_type === "pptx" && "jpg / zip"}
+              {file.file_type.includes("->")
+                ? file.file_type.replace("->", " → ")
+                : `${file.file_type} → —`}
             </span>
           </div>
 
@@ -376,7 +376,7 @@ function DropZone({ onFilesSelected, uploading, accept }) {
           {uploading ? "Uploading…" : dragging ? "Drop to upload" : "Drop files here"}
         </p>
         <p className="text-slate-500 text-xs font-mono mt-1">
-          Choose a file, then we&apos;ll convert it to your selected format.
+          Choose a file, and convert it to your selected format.
         </p>
       </div>
 
@@ -410,7 +410,43 @@ export default function FileConverter({ username, onLogout }) {
   const [formats,  setFormats]  = useState(DEFAULT_FORMATS);
   const [sourceExt,setSourceExt]= useState("pdf");
   const [targetExt,setTargetExt]= useState("docx");
+  const [confirmClear, setConfirmClear] = useState(false);
   const pollRef = useRef(null);
+  const clearConfirmTimeoutRef = useRef(null);
+
+  // ── Clear history (confirm once, revert after 3s) ───────────────
+  const handleClearHistory = useCallback(async () => {
+    if (confirmClear) {
+      if (clearConfirmTimeoutRef.current) clearTimeout(clearConfirmTimeoutRef.current);
+      clearConfirmTimeoutRef.current = null;
+      try {
+        await Promise.all(files.map((f) => axios.delete(`/files/${f.id}`)));
+        setFiles([]);
+      } catch (err) {
+        if (err.response?.status === 401) onLogout();
+      }
+      setConfirmClear(false);
+      return;
+    }
+    setConfirmClear(true);
+    clearConfirmTimeoutRef.current = setTimeout(() => {
+      setConfirmClear(false);
+      clearConfirmTimeoutRef.current = null;
+    }, 3000);
+  }, [confirmClear, files, onLogout]);
+
+  const cancelClearHistory = useCallback(() => {
+    if (clearConfirmTimeoutRef.current) clearTimeout(clearConfirmTimeoutRef.current);
+    clearConfirmTimeoutRef.current = null;
+    setConfirmClear(false);
+  }, []);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clearConfirmTimeoutRef.current) clearTimeout(clearConfirmTimeoutRef.current);
+    };
+  }, []);
 
   // ── Fetch file list ─────────────────────────────────────────────
   const fetchFiles = useCallback(async () => {
@@ -615,7 +651,7 @@ export default function FileConverter({ username, onLogout }) {
               Choose how you want to convert your next upload.
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-500 font-mono">Convert</span>
+              
               <FileTypeDropdown
                 value={sourceExt}
                 options={sourceOptions}
@@ -658,14 +694,48 @@ export default function FileConverter({ username, onLogout }) {
           )}
         </section>
 
-        {/* Divider + count */}
+        {/* Divider + count + Clear History */}
         {!loading && files.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <div className="flex-1 h-px bg-white/8" />
-            <span className="text-slate-600 text-xs font-mono">
+            <span className="absolute left-1/2 -translate-x-1/2 text-slate-600 text-xs font-mono pointer-events-none">
               {files.length} file{files.length !== 1 ? "s" : ""}
             </span>
             <div className="flex-1 h-px bg-white/8" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              {confirmClear ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleClearHistory}
+                    className="btn-clear-history confirm"
+                    title="Clear all files"
+                  >
+                    <Trash2 size={12} />
+                    <span>Are you sure?</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelClearHistory}
+                    className="btn-clear-history cancel"
+                    title="Cancel"
+                    aria-label="Cancel clear history"
+                  >
+                    <X size={12} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleClearHistory}
+                  className="btn-clear-history"
+                  title="Clear all files from history"
+                >
+                  <Trash2 size={12} />
+                  <span>Clear History</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
 
