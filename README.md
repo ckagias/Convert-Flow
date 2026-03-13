@@ -14,30 +14,33 @@ Built with **FastAPI + React (Vite) + Tailwind CSS + SQLite + Docker**.
 
 ```
 convertflow/
-├── docker-compose.yml          # Orchestrates backend + frontend containers
-│
-├── backend/
-│   ├── Dockerfile              # Python 3.11-slim image (+ poppler-utils)
-│   ├── requirements.txt        # FastAPI, SQLAlchemy, pdf2docx, Pillow, pdf2image, etc.
-│   ├── main.py                 # FastAPI app — auth, files, formats API
-│   ├── models.py               # SQLAlchemy ORM models
-│   └── converters.py           # Central conversion router (handle_conversion)
-│
-└── frontend/
-    ├── Dockerfile              # Multi-stage: Vite build → Nginx serve
-    ├── nginx.conf              # Reverse proxy + SPA routing
-    ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js      # Typography, color palette, animations
-    ├── postcss.config.js
-    ├── index.html              # Root HTML + font includes
-    └── src/
-        ├── App.jsx             # Auth wrapper, sets axios baseURL + JWT header
-        ├── main.jsx            # React bootstrap
-        ├── index.css           # Tailwind layers + custom utility classes
-        └── components/
-            ├── AuthPage.jsx        # Login / Register UI
-            └── FileConverter.jsx   # Main app (selector, upload, list, notes)
+    ├── docker-compose.yml              # Orchestrates backend + frontend containers
+    │
+    ├── backend/
+    │    ├── Dockerfile                  # Python 3.11-slim image (+ poppler-utils)
+    │    ├── requirements.txt            # FastAPI, SQLAlchemy, pdf2docx, Pillow, pdf2image, etc.
+    │    ├── main.py                     # FastAPI app — auth, files, formats API
+    │    ├── models.py                   # SQLAlchemy ORM models
+    │    └── converters.py               # Central conversion router (handle_conversion)
+    │
+    └── frontend/
+         ├── Dockerfile                  # Multi-stage: Vite build → Nginx serve
+         ├── nginx.conf                  # Reverse proxy + SPA routing
+         ├── package.json
+         ├── vite.config.js
+         ├── postcss.config.js
+         ├── tailwind.config.js          # Typography, color palette, animations
+         ├── index.html                  # Root HTML + font includes
+         ├── public/
+         │    └── favicon.svg            # App favicon matching cyan / navy theme
+         └── src/
+              ├── App.jsx                # Auth wrapper, sets axios baseURL + JWT header
+              ├── main.jsx               # React bootstrap
+              ├── index.css              # Tailwind layers + custom utility classes
+              └── components/
+                   ├── AuthPage.jsx          # Login / Register UI
+                   ├── FileConverter.jsx     # Main app (selector, upload, list, notes)
+                   └── ParticleBackground.jsx# Animated particle background
 ```
 
 ---
