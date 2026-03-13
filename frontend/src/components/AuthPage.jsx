@@ -1,13 +1,14 @@
 // src/components/AuthPage.jsx
 // ─────────────────────────────────────────────────────────────────
-//  Login / Register page.
-//  Toggles between two modes via the `mode` state.
-//  On success calls props.onLogin(token, username).
+//  Login / Register page — redesigned to match MC Patras dashboard.
+//  Glassmorphism card, particle-network background, cyan accent.
+//  Logic is unchanged.
 // ─────────────────────────────────────────────────────────────────
 
 import { useState } from "react";
 import axios from "axios";
 import { ArrowRight, Lock, User, FileStack, AlertCircle } from "lucide-react";
+import ParticleBackground from "./ParticleBackground.jsx";
 
 export default function AuthPage({ onLogin }) {
   const [mode,     setMode]     = useState("login");   // "login" | "register"
@@ -25,11 +26,9 @@ export default function AuthPage({ onLogin }) {
 
     try {
       if (isRegister) {
-        // Register endpoint returns a JWT directly
         const { data } = await axios.post("/auth/register", { username, password });
         onLogin(data.access_token, username);
       } else {
-        // OAuth2 password flow requires form-encoded body
         const form = new URLSearchParams();
         form.append("username", username);
         form.append("password", password);
@@ -49,39 +48,28 @@ export default function AuthPage({ onLogin }) {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 relative overflow-hidden">
 
-      {/* Background grid */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(163,230,53,1) 1px, transparent 1px), linear-gradient(90deg, rgba(163,230,53,1) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-        }}
-      />
+      {/* Animated particle-network background */}
+      <ParticleBackground />
 
-      {/* Glow blobs */}
-      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-lime-400/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-64 h-64 bg-slate-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* ── Logo ───────────────────────────────────────────────── */}
+      {/* ── Logo ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-10 animate-fade-in">
-        <div className="w-10 h-10 bg-lime-400 rounded-lg flex items-center justify-center">
-          <FileStack size={20} className="text-slate-950" />
+        <div className="w-10 h-10 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+          <FileStack size={20} className="text-cyan-400" />
         </div>
-        <span className="font-display text-2xl font-bold text-slate-100 tracking-tight">
-          Convert<span className="text-lime-400">Flow</span>
+        <span className="font-sans text-2xl font-bold text-white tracking-tight">
+          <span className="text-cyan-400">Convert</span>Flow
         </span>
       </div>
 
-      {/* ── Auth Card ──────────────────────────────────────────── */}
+      {/* ── Auth Card ─────────────────────────────────────────── */}
       <div className="card w-full max-w-sm p-8 animate-slide-up shadow-2xl shadow-black/50">
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-display text-xl font-semibold text-slate-100 mb-1">
+          <h1 className="font-sans text-xl font-semibold text-white mb-1">
             {isRegister ? "Create an account" : "Welcome back"}
           </h1>
-          <p className="text-slate-500 text-sm font-sans">
+          <p className="text-slate-400 text-sm">
             {isRegister
               ? "Start converting your files securely."
               : "Sign in to access your files."}
@@ -99,7 +87,7 @@ export default function AuthPage({ onLogin }) {
               <input
                 type="text"
                 className="input-field pl-9"
-                placeholder="your_username"
+                placeholder="Username"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 required
@@ -129,7 +117,7 @@ export default function AuthPage({ onLogin }) {
 
           {/* Error */}
           {error && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm animate-fade-in">
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm animate-fade-in">
               <AlertCircle size={14} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -155,13 +143,13 @@ export default function AuthPage({ onLogin }) {
         </form>
 
         {/* Toggle mode */}
-        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+        <div className="mt-6 pt-6 border-t border-white/10 text-center">
           <span className="text-slate-500 text-sm">
             {isRegister ? "Already have an account? " : "Don't have an account? "}
           </span>
           <button
             onClick={() => { setMode(isRegister ? "login" : "register"); setError(""); }}
-            className="text-lime-400 text-sm hover:text-lime-300 font-medium transition-colors"
+            className="text-cyan-400 text-sm hover:text-cyan-300 font-medium transition-colors"
           >
             {isRegister ? "Sign in" : "Register"}
           </button>

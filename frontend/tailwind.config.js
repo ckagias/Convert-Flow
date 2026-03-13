@@ -4,30 +4,37 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // iOS-like system typography (SF Pro / system UI)
-        display: ["-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
-        sans:    ["-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+        // Inter from Google Fonts
+        display: ["'Inter'", "system-ui", "sans-serif"],
+        sans:    ["'Inter'", "system-ui", "sans-serif"],
         mono:    ["'DM Mono'", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       colors: {
-        // Core palette: deep slate + cool cyan accent (no yellow/acid tones)
+        // Deep navy-black base
         slate: {
-          950: "#0a0f1a",
-          900: "#0f172a",
-          800: "#1e293b",
-          700: "#334155",
-          600: "#475569",
-          500: "#64748b",
-          400: "#94a3b8",
-          300: "#cbd5e1",
+          950: "#060b14",
+          900: "#0d1520",
+          800: "#132030",
+          700: "#1e3448",
+          600: "#2e4a66",
+          500: "#4a6380",
+          400: "#7a9ab2",
+          300: "#a8c4d8",
+          200: "#c9dde8",
         },
-        // Retain "lime" name in classes but map to a cyan/teal range
-        lime: {
-          400: "#22d3ee", // cyan-400
+        // Cyan accent (matches MC Patras dashboard)
+        cyan: {
+          500: "#06b6d4",
+          400: "#22d3ee",
           300: "#67e8f9",
           200: "#a5f3fc",
         },
-        // Amber repurposed as a soft violet accent (non-yellow)
+        // Keep "lime" name in classes but map to cyan range
+        lime: {
+          400: "#22d3ee",
+          300: "#67e8f9",
+          200: "#a5f3fc",
+        },
         amber: {
           400: "#a855f7",
         },
@@ -37,11 +44,11 @@ export default {
         },
       },
       animation: {
-        "pulse-slow":   "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "spin-slow":    "spin 2s linear infinite",
-        "fade-in":      "fadeIn 0.4s ease forwards",
-        "slide-up":     "slideUp 0.35s ease forwards",
-        "shimmer":      "shimmer 1.5s infinite",
+        "pulse-slow":  "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "spin-slow":   "spin 2s linear infinite",
+        "fade-in":     "fadeIn 0.4s ease forwards",
+        "slide-up":    "slideUp 0.35s ease forwards",
+        "shimmer":     "shimmer 1.5s infinite",
       },
       keyframes: {
         fadeIn:  { from: { opacity: "0" }, to: { opacity: "1" } },

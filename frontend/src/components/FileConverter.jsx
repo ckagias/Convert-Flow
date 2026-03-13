@@ -1,8 +1,12 @@
 // src/components/FileConverter.jsx
 // ─────────────────────────────────────────────────────────────────
 //  Main application view after login.
+//    - Floating pill-shaped glassmorphism navbar
+//    - Animated particle-network background
+//    - Glassmorphism file cards
+//    - Cyan accent colors
 //
-//  Features:
+//  Features (logic unchanged):
 //    • Drag-and-drop (+ click) file upload zone
 //    • Live file list with status polling
 //    • Per-file Notes (add / delete comments)
@@ -17,13 +21,14 @@ import {
   XCircle, Clock, RefreshCw, Download, Trash2, MessageSquarePlus,
   ChevronDown, ChevronUp, StickyNote, Loader2, FileStack, X
 } from "lucide-react";
+import ParticleBackground from "./ParticleBackground.jsx";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const STATUS_META = {
   pending:    { label: "Queued",      color: "text-amber-400  bg-amber-400/10  border-amber-400/20",  Icon: Clock },
-  converting: { label: "Converting",  color: "text-sky-400    bg-sky-400/10    border-sky-400/20",    Icon: Loader2 },
-  done:       { label: "Ready",       color: "text-lime-400   bg-lime-400/10   border-lime-400/20",   Icon: CheckCircle2 },
+  converting: { label: "Converting",  color: "text-cyan-400   bg-cyan-400/10   border-cyan-400/20",   Icon: Loader2 },
+  done:       { label: "Ready",       color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", Icon: CheckCircle2 },
   error:      { label: "Failed",      color: "text-rose-400   bg-rose-400/10   border-rose-400/20",   Icon: XCircle },
 };
 
@@ -45,18 +50,18 @@ function formatDate(iso) {
 }
 
 function FileTypeIcon({ type }) {
-  if (type === "pdf")  return <FileText      size={16} className="text-rose-400 shrink-0" />;
-  if (type === "pptx") return <Presentation  size={16} className="text-amber-400 shrink-0" />;
-  return <FileText size={16} className="text-slate-500 shrink-0" />;
+  if (type === "pdf")  return <FileText     size={16} className="text-rose-400 shrink-0" />;
+  if (type === "pptx") return <Presentation size={16} className="text-amber-400 shrink-0" />;
+  return <FileText size={16} className="text-slate-400 shrink-0" />;
 }
 
 // ── Notes sub-component ────────────────────────────────────────────────────────
 
 function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
-  const [open,    setOpen]    = useState(false);
-  const [draft,   setDraft]   = useState("");
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState("");
+  const [open,   setOpen]   = useState(false);
+  const [draft,  setDraft]  = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
 
   const addNote = async () => {
     if (!draft.trim()) return;
@@ -78,25 +83,25 @@ function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
       await axios.delete(`/files/${file.id}/comments/${commentId}`);
       onCommentDeleted(file.id, commentId);
     } catch {
-      // Silently fail; a retry UX is out of scope here
+      // Silently fail
     }
   };
 
   const noteCount = file.comments?.length || 0;
 
   return (
-    <div className="border-t border-slate-800">
+    <div className="border-t border-white/5">
       {/* Toggle */}
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between px-4 py-2.5 text-slate-500
-                   hover:text-slate-300 hover:bg-slate-800/50 transition-colors text-xs font-mono"
+                   hover:text-slate-300 hover:bg-white/5 transition-colors text-xs font-mono rounded-b-2xl"
       >
         <span className="flex items-center gap-1.5">
           <StickyNote size={12} />
           Notes
           {noteCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-300 text-[10px]">
+            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-slate-300 text-[10px]">
               {noteCount}
             </span>
           )}
@@ -111,7 +116,7 @@ function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
           {file.comments?.length > 0 ? (
             <ul className="space-y-2">
               {file.comments.map(c => (
-                <li key={c.id} className="group flex items-start gap-2 p-2.5 rounded-lg bg-slate-800/60">
+                <li key={c.id} className="group flex items-start gap-2 p-2.5 rounded-xl bg-white/5 border border-white/5">
                   <span className="text-slate-300 text-sm flex-1 leading-relaxed">{c.content}</span>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className="text-slate-600 text-[10px] font-mono">{formatDate(c.created_at)}</span>
@@ -186,7 +191,6 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      // Optional: you could surface an error toast here if desired
       console.error("Download failed", e);
     }
   };
@@ -204,7 +208,7 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
 
   return (
     <div className={`card overflow-hidden animate-slide-up transition-all duration-200
-                     ${deleting ? "opacity-40 pointer-events-none" : ""}`}>
+                     ${deleting ? "opacity-40 pointer-events-none" : "hover:border-white/20 hover:shadow-[0_0_20px_-8px_rgba(34,211,238,0.15)]"}`}>
 
       {/* Card header */}
       <div className="p-4 flex items-start gap-3">
@@ -222,7 +226,7 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             <StatusBadge status={file.status} />
             <span className="text-slate-600 text-[11px] font-mono">{formatDate(file.created_at)}</span>
-            <span className="text-slate-700 text-[10px] font-mono uppercase tracking-wider">
+            <span className="text-slate-600 text-[10px] font-mono uppercase tracking-wider">
               {file.file_type} →{" "}
               {file.file_type === "pdf"  && "docx"}
               {file.file_type === "pptx" && "jpg / zip"}
@@ -231,8 +235,8 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
 
           {/* Converting progress hint */}
           {file.status === "converting" && (
-            <div className="mt-2 h-0.5 w-full bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full w-1/2 bg-sky-400 rounded-full animate-pulse-slow" />
+            <div className="mt-2 h-0.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-cyan-400 rounded-full animate-pulse-slow" />
             </div>
           )}
         </div>
@@ -242,7 +246,7 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
           {file.status === "done" && (
             <button
               onClick={handleDownload}
-              className="btn-ghost px-2 py-1.5 text-lime-400 hover:text-lime-300 hover:bg-lime-400/10"
+              className="btn-ghost px-2 py-1.5 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
               title="Download converted file"
             >
               <Download size={15} />
@@ -292,11 +296,11 @@ function DropZone({ onFilesSelected, uploading, accept }) {
       onClick={() => !uploading && inputRef.current?.click()}
       className={`
         relative flex flex-col items-center justify-center gap-3
-        border-2 border-dashed rounded-xl p-10 cursor-pointer
-        transition-all duration-200 select-none
+        border-2 border-dashed rounded-2xl p-10 cursor-pointer
+        transition-all duration-200 select-none backdrop-blur-sm
         ${dragging
           ? "drop-zone-active"
-          : "border-slate-700 hover:border-slate-500 hover:bg-slate-800/30"
+          : "border-white/10 hover:border-white/25 hover:bg-white/5 bg-white/3"
         }
         ${uploading ? "cursor-wait opacity-60" : ""}
       `}
@@ -312,26 +316,29 @@ function DropZone({ onFilesSelected, uploading, accept }) {
 
       {/* Icon */}
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center
-                        ${dragging ? "bg-lime-400/20" : "bg-slate-800"} transition-colors`}>
+                        border transition-colors
+                        ${dragging
+                          ? "bg-cyan-400/15 border-cyan-400/30"
+                          : "bg-white/5 border-white/10"}`}>
         {uploading
-          ? <Loader2 size={26} className="text-lime-400 animate-spin" />
-          : <UploadCloud size={26} className={dragging ? "text-lime-400" : "text-slate-500"} />
+          ? <Loader2 size={26} className="text-cyan-400 animate-spin" />
+          : <UploadCloud size={26} className={dragging ? "text-cyan-400" : "text-slate-400"} />
         }
       </div>
 
       {/* Text */}
       <div className="text-center">
-        <p className="font-display text-sm font-medium text-slate-300">
+        <p className="font-sans text-sm font-medium text-slate-200">
           {uploading ? "Uploading…" : dragging ? "Drop to upload" : "Drop files here"}
         </p>
-        <p className="text-slate-600 text-xs font-mono mt-1">
+        <p className="text-slate-500 text-xs font-mono mt-1">
           Choose a file, then we&apos;ll convert it to your selected format.
         </p>
       </div>
 
       {!uploading && (
-        <span className="text-xs text-slate-600 font-sans">
-          or <span className="text-lime-400 underline underline-offset-2">browse</span>
+        <span className="text-xs text-slate-500 font-sans">
+          or <span className="text-cyan-400 underline underline-offset-2">browse</span>
         </span>
       )}
     </div>
@@ -355,7 +362,7 @@ export default function FileConverter({ username, onLogout }) {
   const [files,    setFiles]    = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [uploading,setUploading]= useState(false);
-  const [errors,   setErrors]   = useState([]);     // upload error messages
+  const [errors,   setErrors]   = useState([]);
   const [formats,  setFormats]  = useState(DEFAULT_FORMATS);
   const [sourceExt,setSourceExt]= useState("pdf");
   const [targetExt,setTargetExt]= useState("docx");
@@ -401,7 +408,7 @@ export default function FileConverter({ username, onLogout }) {
           setTargetExt(firstTarget);
         }
       } catch {
-        // If this fails we still allow uploads; backend will validate.
+        // Fall back to DEFAULT_FORMATS
       }
     };
     loadFormats();
@@ -410,7 +417,6 @@ export default function FileConverter({ username, onLogout }) {
   // ── Initial load + polling ──────────────────────────────────────
   useEffect(() => {
     fetchFiles();
-    // Poll every 3s to catch status transitions (pending → converting → done)
     pollRef.current = setInterval(fetchFiles, 3000);
     return () => clearInterval(pollRef.current);
   }, [fetchFiles]);
@@ -437,7 +443,6 @@ export default function FileConverter({ username, onLogout }) {
       form.append("file", file);
       const ext = file.name.split(".").pop()?.toLowerCase();
 
-      // Ensure the selected source/target pair is valid for this file.
       const src = ext && formats[ext] ? ext : sourceExt;
       const allowedTargets = formats[src] || [];
       let chosenTarget = targetExt;
@@ -459,7 +464,6 @@ export default function FileConverter({ username, onLogout }) {
       setTimeout(() => setErrors([]), 5000);
     }
 
-    // Immediately refresh to show the new file(s)
     fetchFiles();
   };
 
@@ -485,7 +489,7 @@ export default function FileConverter({ username, onLogout }) {
     setFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  // ── Active jobs indicator ───────────────────────────────────────
+  // ── Derived state ───────────────────────────────────────────────
   const activeJobs = files.filter(f => f.status === "pending" || f.status === "converting").length;
 
   const acceptExtensions = Object.keys(formats).length
@@ -502,52 +506,66 @@ export default function FileConverter({ username, onLogout }) {
   return (
     <div className="min-h-dvh flex flex-col">
 
-      {/* ── Navbar ───────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-lime-400 rounded-md flex items-center justify-center">
-              <FileStack size={14} className="text-slate-950" />
-            </div>
-            <span className="font-display font-bold text-slate-100">
-              Convert<span className="text-lime-400">Flow</span>
-            </span>
-          </div>
+      {/* ── Particle background (fixed, behind everything) ──────── */}
+      <ParticleBackground />
 
-          {/* Right side */}
-          <div className="flex items-center gap-4">
-            {/* Active jobs */}
-            {activeJobs > 0 && (
-              <div className="flex items-center gap-1.5 text-sky-400 text-xs font-mono animate-pulse-slow">
-                <RefreshCw size={11} className="animate-spin-slow" />
-                {activeJobs} converting
-              </div>
-            )}
+      {/* ── Floating Pill Navbar ─────────────────────────────────── */}
+      <header className="py-5 sticky top-0 z-50 pointer-events-none">
+        <div className="max-w-3xl mx-auto px-4 flex items-center justify-center pointer-events-auto">
 
-            {/* User */}
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
-                <span className="text-[10px] font-mono text-slate-400 uppercase">
-                  {username?.[0] || "?"}
-                </span>
+          {/* Pill nav shell */}
+          <nav className="flex items-center gap-2 bg-white/5 backdrop-blur-xl px-3 py-2 rounded-full
+                          border border-white/10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.6)]
+                          w-full max-w-2xl justify-between">
+
+            {/* Logo */}
+            <div className="flex items-center gap-2 pl-1">
+              <div className="w-6 h-6 bg-cyan-400/15 border border-cyan-400/30 rounded-lg
+                              flex items-center justify-center">
+                <FileStack size={13} className="text-cyan-400" />
               </div>
-              <span className="text-slate-400 text-xs font-mono hidden sm:block">{username}</span>
+              <span className="font-sans font-bold text-white text-sm">
+                <span className="text-cyan-400">Convert</span>Flow
+              </span>
             </div>
 
-            <button onClick={onLogout} className="btn-ghost px-2 py-1.5 text-slate-600" title="Log out">
-              <LogOut size={14} />
-            </button>
-          </div>
+            {/* Right side: active jobs + user + logout */}
+            <div className="flex items-center gap-3 pr-1">
+              {activeJobs > 0 && (
+                <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-mono animate-pulse-slow">
+                  <RefreshCw size={11} className="animate-spin-slow" />
+                  {activeJobs} converting
+                </div>
+              )}
+
+              {/* User avatar */}
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-white/10 border border-white/15
+                                flex items-center justify-center">
+                  <span className="text-[10px] font-mono text-slate-300 uppercase">
+                    {username?.[0] || "?"}
+                  </span>
+                </div>
+                <span className="text-slate-400 text-xs font-mono hidden sm:block">{username}</span>
+              </div>
+
+              <button
+                onClick={onLogout}
+                className="btn-ghost px-2 py-1.5 text-slate-500 hover:text-slate-300"
+                title="Log out"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          </nav>
         </div>
       </header>
 
-      {/* ── Main ─────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
+      {/* ── Main ──────────────────────────────────────────────────── */}
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-4 pb-12 space-y-6 relative z-10">
 
-        {/* Upload zone */}
+        {/* Conversion selector + drop zone */}
         <section>
-          {/* Conversion selector */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
             <div className="text-xs text-slate-500 font-mono">
               Choose how you want to convert your next upload.
@@ -606,18 +624,17 @@ export default function FileConverter({ username, onLogout }) {
         {/* Divider + count */}
         {!loading && files.length > 0 && (
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-800" />
+            <div className="flex-1 h-px bg-white/8" />
             <span className="text-slate-600 text-xs font-mono">
               {files.length} file{files.length !== 1 ? "s" : ""}
             </span>
-            <div className="flex-1 h-px bg-slate-800" />
+            <div className="flex-1 h-px bg-white/8" />
           </div>
         )}
 
         {/* File list */}
         <section className="space-y-3">
           {loading ? (
-            /* Skeleton placeholders */
             [0, 1, 2].map(i => (
               <div key={i} className="card p-4 space-y-2">
                 <div className="skeleton h-4 w-2/3" />
@@ -625,13 +642,13 @@ export default function FileConverter({ username, onLogout }) {
               </div>
             ))
           ) : files.length === 0 ? (
-            /* Empty state */
             <div className="text-center py-16 animate-fade-in">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
-                <UploadCloud size={28} className="text-slate-600" />
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-white/5 border border-white/10
+                              flex items-center justify-center mb-4">
+                <UploadCloud size={28} className="text-slate-500" />
               </div>
-              <p className="font-display text-slate-500 font-medium mb-1">No files yet</p>
-              <p className="text-slate-700 text-sm font-mono">Upload a file to get started</p>
+              <p className="font-sans text-slate-400 font-medium mb-1">No files yet</p>
+              <p className="text-slate-600 text-sm font-mono">Upload a file to get started</p>
             </div>
           ) : (
             files.map(file => (
@@ -648,18 +665,28 @@ export default function FileConverter({ username, onLogout }) {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-900 py-4 text-center">
-        <p className="text-slate-700 text-xs font-mono">
-          <a
-            href="https://github.com/ckagias"
-            target="_blank"
-            rel="noreferrer"
-            className="text-lime-400 hover:text-lime-300 underline underline-offset-2"
-          >
-            Developed by Christoforos Kagias
-          </a>
-        </p>
+      <footer className="relative z-10 mt-auto">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="py-6 border-t border-white/8 flex flex-col md:flex-row
+                          justify-between items-center text-xs text-slate-500 gap-4">
+            <div className="font-medium tracking-wide">
+              <span className="text-cyan-400 font-bold">Convert</span>Flow &copy; 2026 | All rights reserved
+            </div>
+            <div>
+              Developed &amp; Designed by{" "}
+              <a
+                href="https://github.com/ckagias"
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-300 hover:text-cyan-400 transition-colors font-bold hover:underline"
+              >
+                Christoforos Kagias
+              </a>
+            </div>
+          </div>
+        </div>
       </footer>
+
     </div>
   );
 }

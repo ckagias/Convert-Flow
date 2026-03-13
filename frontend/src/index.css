@@ -17,49 +17,73 @@
   body {
     @apply bg-slate-950 text-slate-300 font-sans;
     min-height: 100dvh;
+    background-color: #060b14;
   }
 
   /* Scrollbar styling */
-  ::-webkit-scrollbar        { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track  { @apply bg-slate-900; }
-  ::-webkit-scrollbar-thumb  { @apply bg-slate-700 rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-600; }
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { background: #0d1520; }
+  ::-webkit-scrollbar-thumb  { background: #1e3448; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2e4a66; }
 }
 
 /* ── Component utilities ──────────────────────────────────────── */
 @layer components {
+
+  /* Glassmorphism card — matches MC Patras dashboard */
+  .card {
+    @apply bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md
+           shadow-[0_4px_24px_-8px_rgba(0,0,0,0.6)];
+  }
+
+  /* Primary action button — cyan accent */
   .btn-primary {
     @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
-           bg-lime-400 text-slate-950 font-display font-semibold text-sm
-           hover:bg-lime-300 active:scale-95
+           bg-cyan-400 text-slate-950 font-sans font-semibold text-sm
+           hover:bg-cyan-300 active:scale-95
            transition-all duration-150 cursor-pointer
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
   }
 
+  /* Ghost button */
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg
-           text-slate-400 hover:text-slate-200 hover:bg-slate-800
+           text-slate-400 hover:text-slate-200 hover:bg-white/10
            font-sans text-sm transition-all duration-150 cursor-pointer;
   }
 
+  /* Danger button */
   .btn-danger {
     @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-md
            text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
            font-sans text-xs transition-all duration-150 cursor-pointer;
   }
 
+  /* Form input */
   .input-field {
     @apply w-full px-4 py-3 rounded-lg
-           bg-slate-800 border border-slate-700
+           bg-white/5 border border-white/10
            text-slate-200 font-mono text-sm placeholder:text-slate-500
-           focus:outline-none focus:border-lime-400/60 focus:ring-1 focus:ring-lime-400/20
-           transition-colors duration-150;
+           focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20
+           transition-colors duration-150 backdrop-blur-sm;
   }
 
-  .card {
-    @apply bg-slate-900 border border-slate-800 rounded-xl;
+  /* Compact select used in "Convert .file to .file" toolbar */
+  .select-field {
+    @apply w-full px-3 py-2 rounded-lg
+           bg-slate-900 border border-cyan-400/40
+           text-slate-100 font-mono text-xs
+           focus:outline-none focus:border-cyan-300/70 focus:ring-1 focus:ring-cyan-400/30
+           hover:bg-cyan-400/15
+           transition-colors duration-150 backdrop-blur-sm;
   }
 
+  .select-field option {
+    background-color: #020617; /* deep navy to match page background */
+    color: #e5f6ff;            /* soft cyan-tinted light text */
+  }
+
+  /* Status pill badge */
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium;
   }
@@ -68,28 +92,19 @@
   .skeleton {
     background: linear-gradient(
       90deg,
-      theme(colors.slate.800) 25%,
-      theme(colors.slate.700) 50%,
-      theme(colors.slate.800) 75%
+      rgba(255,255,255,0.04) 25%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.04) 75%
     );
     background-size: 200% 100%;
-    @apply animate-shimmer rounded;
+    @apply animate-shimmer rounded-lg;
   }
 }
 
-/* ── Noise texture overlay ────────────────────────────────────── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.4;
-}
-
-/* ── Custom drag-over highlight ──────────────────────────────── */
+/* ── Drop zone drag highlight ─────────────────────────────────── */
 .drop-zone-active {
-  @apply border-lime-400 bg-lime-400/5;
-  box-shadow: inset 0 0 40px rgba(163, 230, 53, 0.05);
+  border-color: #22d3ee !important;
+  background-color: rgba(34, 211, 238, 0.05);
+  box-shadow: inset 0 0 40px rgba(34, 211, 238, 0.06),
+              0 0 0 1px rgba(34, 211, 238, 0.15);
 }
