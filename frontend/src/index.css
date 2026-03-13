@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Global resets & base styles ─────────────────────────────── */
+/* ============================================
+   BASE STYLES (applies to the whole page)
+   ============================================ */
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -20,23 +22,35 @@
     background-color: #060b14;
   }
 
-  /* Scrollbar styling */
-  ::-webkit-scrollbar        { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track  { background: #0d1520; }
-  ::-webkit-scrollbar-thumb  { background: #1e3448; border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: #2e4a66; }
+  /* Custom scrollbar (dark theme) */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0d1520;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e3448;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e4a66;
+  }
 }
 
-/* ── Component utilities ──────────────────────────────────────── */
+/* ============================================
+   REUSABLE COMPONENT CLASSES
+   ============================================ */
 @layer components {
 
-  /* Glassmorphism card — matches MC Patras dashboard */
+  /* Card: frosted-glass style boxes */
   .card {
     @apply bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md
            shadow-[0_4px_24px_-8px_rgba(0,0,0,0.6)];
   }
 
-  /* Primary action button — cyan accent */
+  /* Main action button (e.g. Sign in, Create account) */
   .btn-primary {
     @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
            bg-cyan-400 text-slate-950 font-sans font-semibold text-sm
@@ -45,21 +59,21 @@
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
   }
 
-  /* Ghost button */
+  /* Secondary button (no solid background) */
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg
            text-slate-400 hover:text-slate-200 hover:bg-white/10
            font-sans text-sm transition-all duration-150 cursor-pointer;
   }
 
-  /* Danger button */
+  /* Red/danger button (e.g. delete) */
   .btn-danger {
     @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-md
            text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
            font-sans text-xs transition-all duration-150 cursor-pointer;
   }
 
-  /* Form input */
+  /* Text inputs and similar form fields */
   .input-field {
     @apply w-full px-4 py-3 rounded-lg
            bg-white/5 border border-white/10
@@ -68,7 +82,7 @@
            transition-colors duration-150 backdrop-blur-sm;
   }
 
-  /* Compact select used in "Convert .file to .file" toolbar */
+  /* File type dropdown trigger (Convert .pdf to .docx) */
   .select-field {
     @apply w-full px-3 py-2 rounded-lg
            bg-slate-900 border border-cyan-400/40
@@ -77,19 +91,18 @@
            hover:bg-cyan-400/15
            transition-colors duration-150 backdrop-blur-sm;
   }
-
   .select-field option {
-    background-color: #020617; /* deep navy to match page background */
-    color: #e5f6ff;            /* soft cyan-tinted light text */
+    background-color: #020617;
+    color: #e5f6ff;
   }
 
-  /* Custom file-type dropdown list (dark, not white) */
+  /* Popup list when the file type dropdown is open */
   .file-type-dropdown-list {
     @apply absolute z-50 mt-1 w-full rounded-lg border border-cyan-400/40
            bg-slate-900 shadow-lg py-1 max-h-48 overflow-y-auto;
   }
 
-  /* Clear History — developer-style ghost, thin border, hover glow */
+  /* Clear History button (subtle, with hover glow) */
   .btn-clear-history {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md
            font-mono text-xs border border-white/10
@@ -112,12 +125,12 @@
     @apply px-1.5 text-slate-500 hover:text-slate-300 hover:bg-white/5;
   }
 
-  /* Status pill badge */
+  /* Status labels on file cards (Queued, Converting, Ready, Failed) */
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium;
   }
 
-  /* Shimmer loading skeleton */
+  /* Gray animated placeholder while content loads */
   .skeleton {
     background: linear-gradient(
       90deg,
@@ -130,7 +143,9 @@
   }
 }
 
-/* ── Drop zone drag highlight ─────────────────────────────────── */
+/* ============================================
+   DROP ZONE (when user drags files over it)
+   ============================================ */
 .drop-zone-active {
   border-color: #22d3ee !important;
   background-color: rgba(34, 211, 238, 0.05);

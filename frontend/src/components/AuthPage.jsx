@@ -51,21 +51,23 @@ export default function AuthPage({ onLogin }) {
       {/* Animated particle-network background */}
       <ParticleBackground />
 
-      {/* ── Logo ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-10 animate-fade-in">
-        <div className="w-10 h-10 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center backdrop-blur-sm">
-          <FileStack size={20} className="text-cyan-400" />
+      {/* Centered content: logo + card */}
+      <div className="w-full max-w-sm flex flex-col items-center relative z-10">
+        {/* ── Logo (centered) ───────────────────────────────────── */}
+        <div className="flex items-center justify-center gap-3 mb-10 animate-fade-in">
+          <div className="w-10 h-10 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <FileStack size={20} className="text-cyan-400" />
+          </div>
+          <span className="font-sans text-2xl font-bold text-white tracking-tight">
+            <span className="text-cyan-400">Convert</span>Flow
+          </span>
         </div>
-        <span className="font-sans text-2xl font-bold text-white tracking-tight">
-          <span className="text-cyan-400">Convert</span>Flow
-        </span>
-      </div>
 
-      {/* ── Auth Card ─────────────────────────────────────────── */}
-      <div className="card w-full max-w-sm p-8 animate-slide-up shadow-2xl shadow-black/50">
+        {/* ── Auth Card (centered) ───────────────────────────────── */}
+        <div className="card w-full p-8 animate-slide-up shadow-2xl shadow-black/50">
 
-        {/* Header */}
-        <div className="mb-8">
+        {/* Header (centered) */}
+        <div className="mb-8 text-center">
           <h1 className="font-sans text-xl font-semibold text-white mb-1">
             {isRegister ? "Create an account" : "Welcome back"}
           </h1>
@@ -154,10 +156,11 @@ export default function AuthPage({ onLogin }) {
             {isRegister ? "Sign in" : "Register"}
           </button>
         </div>
+        </div>
       </div>
 
       {/* Footer note */}
-      <p className="mt-8 text-slate-600 text-xs font-mono text-center animate-fade-in">
+      <p className="mt-8 text-slate-600 text-xs font-mono text-center animate-fade-in relative z-10">
         Files are scoped to your session — nobody else can see your uploads.
       </p>
     </div>
