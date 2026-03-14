@@ -1,9 +1,4 @@
-// src/components/ParticleBackground.jsx
-// ─────────────────────────────────────────────────────────────────
-//  Animated particle-network background.
-//  Floating nodes drift slowly; glowing cyan lines form between
-//  nearby nodes — evoking data flow and file transformation.
-// ─────────────────────────────────────────────────────────────────
+// Canvas background: moving dots with lines between nearby ones.
 
 import { useEffect, useRef } from "react";
 
@@ -32,7 +27,7 @@ export default function ParticleBackground() {
     canvas.width  = width;
     canvas.height = height;
 
-    // Build particles
+    /* Create the dots with random position and speed */
     const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
       x:  randomBetween(0, width),
       y:  randomBetween(0, height),
@@ -42,7 +37,7 @@ export default function ParticleBackground() {
       opacity: randomBetween(0.4, 0.9),
     }));
 
-    // Resize handler
+    /* Update canvas size when the window is resized */
     const onResize = () => {
       width  = window.innerWidth;
       height = window.innerHeight;
@@ -54,29 +49,29 @@ export default function ParticleBackground() {
     let animId;
 
     const draw = () => {
-      // Clear with semi-opaque fill for subtle trail effect
+      /* Clear the canvas (slightly transparent for a soft trail) */
       ctx.fillStyle = BG_COLOR;
       ctx.fillRect(0, 0, width, height);
 
-      // Update & draw particles
+      /* Move each dot and draw it */
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce off edges with a little padding
+        /* Wrap position when dot goes off screen */
         if (p.x < -10)          { p.x = width + 10;  }
         if (p.x > width + 10)   { p.x = -10;          }
         if (p.y < -10)          { p.y = height + 10; }
         if (p.y > height + 10)  { p.y = -10;          }
 
-        // Draw particle dot
+        /* Draw one dot */
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${PARTICLE_COLOR}, ${p.opacity})`;
         ctx.fill();
       }
 
-      // Draw connection lines between nearby particles
+      /* Draw lines between dots that are close to each other */
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const a = particles[i];
@@ -86,7 +81,7 @@ export default function ParticleBackground() {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < MAX_LINK_DIST) {
-            // Opacity fades the further apart the nodes are
+            /* Line is fainter when dots are farther apart */
             const lineOpacity = (1 - dist / MAX_LINK_DIST) * 0.35;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);

@@ -4,13 +4,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Inter from Google Fonts
+        /* Body and headings use Inter; code uses DM Mono */
         display: ["'Inter'", "system-ui", "sans-serif"],
         sans:    ["'Inter'", "system-ui", "sans-serif"],
         mono:    ["'DM Mono'", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       colors: {
-        // Deep navy-black base
+        /* Dark background and gray text */
         slate: {
           950: "#060b14",
           900: "#0d1520",
@@ -22,14 +22,14 @@ export default {
           300: "#a8c4d8",
           200: "#c9dde8",
         },
-        // Cyan accent (matches MC Patras dashboard)
+        /* Main accent color for buttons and links */
         cyan: {
           500: "#06b6d4",
           400: "#22d3ee",
           300: "#67e8f9",
           200: "#a5f3fc",
         },
-        // Keep "lime" name in classes but map to cyan range
+        /* Same as cyan (for classes that use "lime" in the name) */
         lime: {
           400: "#22d3ee",
           300: "#67e8f9",

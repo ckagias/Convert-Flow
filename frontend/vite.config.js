@@ -1,13 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    // Proxy API calls to the backend during local development
-    // (not used in Docker where Nginx handles proxying)
+    /* In local dev, forward /auth, /files, /health to the backend on port 8000 */
     proxy: {
       "/auth":  "http://localhost:8000",
       "/files": "http://localhost:8000",

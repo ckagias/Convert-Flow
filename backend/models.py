@@ -1,8 +1,4 @@
-# backend/models.py
-# ─────────────────────────────────────────────────────────────────
-#  SQLAlchemy ORM Models for ConvertFlow
-#  Tables: users, files, comments, security_logs
-# ─────────────────────────────────────────────────────────────────
+# Database tables: users, files, comments, security_logs
 
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
@@ -13,40 +9,27 @@ Base = declarative_base()
 
 
 class User(Base):
-    """
-    Represents an authenticated user.
-
-    `session_id` is a UUID generated at registration time. All uploaded
-    files are prefixed with this ID on disk, so even if a stored filename
-    were guessed it would only resolve to *that* user's file.
-    """
+    """One user. session_id is used as a prefix for their files on disk."""
     __tablename__ = "users"
 
     id              = Column(Integer, primary_key=True, index=True)
     username        = Column(String(64), unique=True, index=True, nullable=False)
     hashed_password = Column(String(128), nullable=False)
-    # Unique namespace for this user's files on disk
-    session_id      = Column(String(36), unique=True, index=True, nullable=False)
+    session_id      = Column(String(36), unique=True, index=True, nullable=False)  # Prefix for file paths
     created_at      = Column(DateTime, default=datetime.utcnow)
 
     files = relationship("FileRecord", back_populates="owner", cascade="all, delete-orphan")
 
 
 class FileRecord(Base):
-    """
-    Tracks every uploaded file and its conversion status.
-
-    `stored_filename`   — the UUID-based name used on disk (not the original).
-    `converted_filename`— set by the background worker once conversion completes.
-    `status`            — one of: pending | converting | done | error
-    """
+    """One uploaded file and its conversion status (pending / converting / done / error)."""
     __tablename__ = "files"
 
     id                  = Column(Integer, primary_key=True, index=True)
-    original_filename   = Column(String(256), nullable=False)   # What the user called it
-    stored_filename     = Column(String(128), nullable=False)   # Safe UUID-prefixed disk name
-    converted_filename  = Column(String(256), nullable=True)    # Output file name (set on success)
-    file_type           = Column(String(8),   nullable=False)   # "pdf" | "pptx"
+    original_filename   = Column(String(256), nullable=False)
+    stored_filename     = Column(String(128), nullable=False)   # Safe name on disk
+    converted_filename  = Column(String(256), nullable=True)    # Set when conversion finishes
+    file_type           = Column(String(8),   nullable=False)   # e.g. "pdf->docx"
     status              = Column(String(16),  nullable=False, default="pending")
     user_id             = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at          = Column(DateTime, default=datetime.utcnow)
@@ -57,10 +40,7 @@ class FileRecord(Base):
 
 
 class Comment(Base):
-    """
-    Simple notes/reminders attached to a FileRecord.
-    Allows users to annotate a file (e.g. "Final draft for the boss").
-    """
+    """A text note attached to a file."""
     __tablename__ = "comments"
 
     id         = Column(Integer, primary_key=True, index=True)
@@ -72,11 +52,7 @@ class Comment(Base):
 
 
 class SecurityLog(Base):
-    """
-    Audit trail for security-relevant events:
-    USER_REGISTERED, USER_LOGIN, FAILED_LOGIN, FILE_UPLOADED, etc.
-    Stored in the DB for easy inspection via SQL.
-    """
+    """Log of auth and upload events (login, register, upload, etc.)."""
     __tablename__ = "security_logs"
 
     id         = Column(Integer, primary_key=True, index=True)

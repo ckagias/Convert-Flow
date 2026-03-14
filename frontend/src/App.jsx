@@ -1,21 +1,14 @@
-// src/App.jsx
-// ─────────────────────────────────────────────────────────────────
-//  Root component — handles Auth state.
-//  If the user holds a valid JWT → render <FileConverter />
-//  Otherwise                     → render <AuthPage />
-// ─────────────────────────────────────────────────────────────────
+// Chooses login page or main app based on whether the user has a saved token.
 
 import { useState, useEffect } from "react";
 import axios from "axios";
 import AuthPage       from "./components/AuthPage.jsx";
 import FileConverter  from "./components/FileConverter.jsx";
 
-// Point all API calls at the backend.
-// In Docker: Nginx proxies /auth and /files to the backend container.
-// In local dev: Vite's dev server proxy handles it (vite.config.js).
+/* Base URL for API requests (Vite proxy or Nginx in production) */
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
-// Attach the JWT to every outgoing axios request automatically
+/* Send all axios requests to the backend */
 axios.defaults.baseURL = API_BASE;
 
 function App() {
@@ -28,7 +21,7 @@ function App() {
   });
   const [username, setUsername] = useState(() => localStorage.getItem("cf_user")  || "");
 
-  // Inject the Authorization header whenever `token` changes
+  /* Set the JWT on axios so every API call is authenticated */
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -38,7 +31,7 @@ function App() {
   }, [token]);
 
   const handleLogin = (newToken, user) => {
-    // Immediately attach token so the very first /files request is authorized
+    /* Use the new token for the next API call */
     axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
     localStorage.setItem("cf_token", newToken);
     localStorage.setItem("cf_user",  user);

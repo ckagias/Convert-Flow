@@ -1,9 +1,4 @@
-// src/components/AuthPage.jsx
-// ─────────────────────────────────────────────────────────────────
-//  Login / Register page — redesigned to match MC Patras dashboard.
-//  Glassmorphism card, particle-network background, cyan accent.
-//  Logic is unchanged.
-// ─────────────────────────────────────────────────────────────────
+// Login and register page. Shows a form and sends credentials to the API.
 
 import { useState } from "react";
 import axios from "axios";
@@ -48,12 +43,12 @@ export default function AuthPage({ onLogin }) {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 relative overflow-hidden">
 
-      {/* Animated particle-network background */}
+      {/* Background with moving dots and lines */}
       <ParticleBackground />
 
-      {/* Centered content: logo + card */}
+      {/* Logo and form card in the middle of the page */}
       <div className="w-full max-w-sm flex flex-col items-center relative z-10">
-        {/* ── Logo (centered) ───────────────────────────────────── */}
+        {/* App name and icon */}
         <div className="flex items-center justify-center gap-3 mb-10 animate-fade-in">
           <div className="w-10 h-10 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center backdrop-blur-sm">
             <FileStack size={20} className="text-cyan-400" />
@@ -63,10 +58,10 @@ export default function AuthPage({ onLogin }) {
           </span>
         </div>
 
-        {/* ── Auth Card (centered) ───────────────────────────────── */}
+        {/* Form card (username, password, sign in / register) */}
         <div className="card w-full p-8 animate-slide-up shadow-2xl shadow-black/50">
 
-        {/* Header (centered) */}
+        {/* Title and subtitle */}
         <div className="mb-8 text-center">
           <h1 className="font-sans text-xl font-semibold text-white mb-1">
             {isRegister ? "Create an account" : "Welcome back"}
@@ -78,7 +73,7 @@ export default function AuthPage({ onLogin }) {
           </p>
         </div>
 
-        {/* Form */}
+        {/* Username and password inputs + submit button */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-mono text-slate-500 mb-1.5 uppercase tracking-wider">
@@ -117,7 +112,7 @@ export default function AuthPage({ onLogin }) {
             </div>
           </div>
 
-          {/* Error */}
+          {/* Show error message if login or register failed */}
           {error && (
             <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm animate-fade-in">
               <AlertCircle size={14} className="mt-0.5 shrink-0" />
@@ -144,7 +139,7 @@ export default function AuthPage({ onLogin }) {
           </button>
         </form>
 
-        {/* Toggle mode */}
+        {/* Switch between Sign in and Register */}
         <div className="mt-6 pt-6 border-t border-white/10 text-center">
           <span className="text-slate-500 text-sm">
             {isRegister ? "Already have an account? " : "Don't have an account? "}
@@ -159,7 +154,7 @@ export default function AuthPage({ onLogin }) {
         </div>
       </div>
 
-      {/* Footer note */}
+      {/* Short note under the form */}
       <p className="mt-8 text-slate-600 text-xs font-mono text-center animate-fade-in relative z-10">
         Files are scoped to your session — nobody else can see your uploads.
       </p>

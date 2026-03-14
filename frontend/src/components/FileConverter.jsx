@@ -1,18 +1,4 @@
-// src/components/FileConverter.jsx
-// ─────────────────────────────────────────────────────────────────
-//  Main application view after login.
-//    - Floating pill-shaped glassmorphism navbar
-//    - Animated particle-network background
-//    - Glassmorphism file cards
-//    - Cyan accent colors
-//
-//  Features (logic unchanged):
-//    • Drag-and-drop (+ click) file upload zone
-//    • Live file list with status polling
-//    • Per-file Notes (add / delete comments)
-//    • Download button for completed conversions
-//    • Delete file
-// ─────────────────────────────────────────────────────────────────
+// Main screen after login: upload files, pick conversion type, see list and notes.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
@@ -23,8 +9,7 @@ import {
 } from "lucide-react";
 import ParticleBackground from "./ParticleBackground.jsx";
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
+/* Labels and colors for file status (Queued, Converting, Ready, Failed) */
 const STATUS_META = {
   pending:    { label: "Queued",      color: "text-amber-400  bg-amber-400/10  border-amber-400/20",  Icon: Clock },
   converting: { label: "Converting",  color: "text-cyan-400   bg-cyan-400/10   border-cyan-400/20",   Icon: Loader2 },
@@ -55,7 +40,7 @@ function FileTypeIcon({ type }) {
   return <FileText size={16} className="text-slate-400 shrink-0" />;
 }
 
-// ── File type dropdown (custom list so it’s not white) ──────────────────────────
+/* Dropdown to choose source and target format (e.g. .pdf to .docx). */
 function FileTypeDropdown({ value, options, onChange, "aria-label": ariaLabel }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -99,8 +84,7 @@ function FileTypeDropdown({ value, options, onChange, "aria-label": ariaLabel })
   );
 }
 
-// ── Notes sub-component ────────────────────────────────────────────────────────
-
+/* Expandable notes section on each file card. Add or delete text notes. */
 function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
   const [open,   setOpen]   = useState(false);
   const [draft,  setDraft]  = useState("");
@@ -127,7 +111,7 @@ function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
       await axios.delete(`/files/${file.id}/comments/${commentId}`);
       onCommentDeleted(file.id, commentId);
     } catch {
-      // Silently fail
+      /* Ignore delete errors */
     }
   };
 
@@ -213,8 +197,7 @@ function NotesSection({ file, onCommentAdded, onCommentDeleted }) {
 }
 
 
-// ── File Card ──────────────────────────────────────────────────────────────────
-
+/* One card in the file list: name, status, download, delete, notes */
 function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
   const [deleting, setDeleting] = useState(false);
 
@@ -317,8 +300,7 @@ function FileCard({ file, onDelete, onCommentAdded, onCommentDeleted }) {
 }
 
 
-// ── Drop Zone ──────────────────────────────────────────────────────────────────
-
+/* Drag-and-drop area to add files. Also works with click to open file picker. */
 function DropZone({ onFilesSelected, uploading, accept }) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
@@ -390,8 +372,7 @@ function DropZone({ onFilesSelected, uploading, accept }) {
 }
 
 
-// ── Main Component ─────────────────────────────────────────────────────────────
-
+/* Default format map if the API does not return one */
 const DEFAULT_FORMATS = {
   pdf:  ["docx", "jpg", "png"],
   docx: ["pdf"],
@@ -414,7 +395,7 @@ export default function FileConverter({ username, onLogout }) {
   const pollRef = useRef(null);
   const clearConfirmTimeoutRef = useRef(null);
 
-  // ── Clear history (confirm once, revert after 3s) ───────────────
+  /* Clear all files. First click shows "Are you sure?", second click deletes. Resets after 3s if no second click. */
   const handleClearHistory = useCallback(async () => {
     if (confirmClear) {
       if (clearConfirmTimeoutRef.current) clearTimeout(clearConfirmTimeoutRef.current);
@@ -441,14 +422,14 @@ export default function FileConverter({ username, onLogout }) {
     setConfirmClear(false);
   }, []);
 
-  // Clear timeout on unmount
+  /* Cancel the 3s reset when the component is removed */
   useEffect(() => {
     return () => {
       if (clearConfirmTimeoutRef.current) clearTimeout(clearConfirmTimeoutRef.current);
     };
   }, []);
 
-  // ── Fetch file list ─────────────────────────────────────────────
+  /* Load the user's file list from the API */
   const fetchFiles = useCallback(async () => {
     try {
       const { data } = await axios.get("/files");
@@ -460,7 +441,7 @@ export default function FileConverter({ username, onLogout }) {
     }
   }, [onLogout]);
 
-  // ── Fetch supported conversions ─────────────────────────────────
+  /* Load which formats can be converted (e.g. pdf → docx) from the API */
   useEffect(() => {
     const loadFormats = async () => {
       try {
@@ -488,20 +469,20 @@ export default function FileConverter({ username, onLogout }) {
           setTargetExt(firstTarget);
         }
       } catch {
-        // Fall back to DEFAULT_FORMATS
+        /* Use DEFAULT_FORMATS if the API fails */
       }
     };
     loadFormats();
   }, []);
 
-  // ── Initial load + polling ──────────────────────────────────────
+  /* Load files once, then refresh the list every 3 seconds */
   useEffect(() => {
     fetchFiles();
     pollRef.current = setInterval(fetchFiles, 3000);
     return () => clearInterval(pollRef.current);
   }, [fetchFiles]);
 
-  // ── Upload handler ──────────────────────────────────────────────
+  /* Send selected files to the API and start conversion */
   const handleFilesSelected = async (rawFiles) => {
     const valid = rawFiles.filter(f => {
       const ext = f.name.split(".").pop()?.toLowerCase();
@@ -547,7 +528,7 @@ export default function FileConverter({ username, onLogout }) {
     fetchFiles();
   };
 
-  // ── Comment callbacks ───────────────────────────────────────────
+  /* Update local state when a note is added or removed */
   const handleCommentAdded = (fileId, comment) => {
     setFiles(prev => prev.map(f =>
       f.id === fileId
@@ -564,12 +545,12 @@ export default function FileConverter({ username, onLogout }) {
     ));
   };
 
-  // ── Delete callback ─────────────────────────────────────────────
+  /* Remove a file from the list after it is deleted on the server */
   const handleDelete = (fileId) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  // ── Derived state ───────────────────────────────────────────────
+  /* Values computed from state (used in the UI below) */
   const activeJobs = files.filter(f => f.status === "pending" || f.status === "converting").length;
 
   const acceptExtensions = Object.keys(formats).length
@@ -586,19 +567,19 @@ export default function FileConverter({ username, onLogout }) {
   return (
     <div className="min-h-dvh flex flex-col">
 
-      {/* ── Particle background (fixed, behind everything) ──────── */}
+      {/* Animated background */}
       <ParticleBackground />
 
-      {/* ── Floating Pill Navbar ─────────────────────────────────── */}
+      {/* Top bar: logo, converting count, user, logout */}
       <header className="py-5 sticky top-0 z-50 pointer-events-none">
         <div className="max-w-3xl mx-auto px-4 flex items-center justify-center pointer-events-auto">
 
-          {/* Pill nav shell */}
+          {/* Navbar content */}
           <nav className="flex items-center gap-2 bg-white/5 backdrop-blur-xl px-3 py-2 rounded-full
                           border border-white/10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.6)]
                           w-full max-w-2xl justify-between">
 
-            {/* Logo */}
+            {/* App name and icon */}
             <div className="flex items-center gap-2 pl-1">
               <div className="w-6 h-6 bg-cyan-400/15 border border-cyan-400/30 rounded-lg
                               flex items-center justify-center">
@@ -609,7 +590,7 @@ export default function FileConverter({ username, onLogout }) {
               </span>
             </div>
 
-            {/* Right side: active jobs + user + logout */}
+            {/* Converting count, username, logout button */}
             <div className="flex items-center gap-3 pr-1">
               {activeJobs > 0 && (
                 <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-mono animate-pulse-slow">
@@ -618,7 +599,7 @@ export default function FileConverter({ username, onLogout }) {
                 </div>
               )}
 
-              {/* User avatar */}
+              {/* User initial and name */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-white/10 border border-white/15
                                 flex items-center justify-center">
@@ -641,10 +622,10 @@ export default function FileConverter({ username, onLogout }) {
         </div>
       </header>
 
-      {/* ── Main ──────────────────────────────────────────────────── */}
+      {/* Main content area */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-4 pb-12 space-y-6 relative z-10">
 
-        {/* Conversion selector + drop zone */}
+        {/* Format dropdowns and drag-and-drop zone */}
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
             <div className="text-xs text-slate-500 font-mono">
@@ -682,7 +663,7 @@ export default function FileConverter({ username, onLogout }) {
             accept={acceptExtensions}
           />
 
-          {/* Upload errors */}
+          {/* List of upload or conversion errors */}
           {errors.length > 0 && (
             <div className="mt-3 space-y-1.5 animate-fade-in">
               {errors.map((e, i) => (
@@ -694,7 +675,7 @@ export default function FileConverter({ username, onLogout }) {
           )}
         </section>
 
-        {/* Divider + count + Clear History */}
+        {/* File count and Clear History button */}
         {!loading && files.length > 0 && (
           <div className="relative flex items-center gap-3">
             <div className="flex-1 h-px bg-white/8" />
@@ -739,7 +720,7 @@ export default function FileConverter({ username, onLogout }) {
           </div>
         )}
 
-        {/* File list */}
+        {/* List of uploaded files (or loading placeholders or empty state) */}
         <section className="space-y-3">
           {loading ? (
             [0, 1, 2].map(i => (
@@ -771,7 +752,7 @@ export default function FileConverter({ username, onLogout }) {
         </section>
       </main>
 
-      {/* ── Footer ───────────────────────────────────────────────── */}
+      {/* Footer with copyright and link */}
       <footer className="relative z-10 mt-auto">
         <div className="max-w-3xl mx-auto px-4">
           <div className="py-6 border-t border-white/8 flex flex-col md:flex-row

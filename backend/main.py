@@ -1,27 +1,5 @@
-# backend/main.py
-# ─────────────────────────────────────────────────────────────────
-#  ConvertFlow — FastAPI Backend
-#
-#  Security model:
-#    - JWT Bearer tokens (HS256, 24-hour expiry)
-#    - Every DB query filters by `user_id` → users are completely isolated
-#    - Stored filenames are UUID-prefixed → no path-traversal risk
-#    - IDOR protection on every file/comment endpoint
-#    - Security audit log stored in SQLite
-#
-#  Endpoints:
-#    POST   /auth/register
-#    POST   /auth/token          (OAuth2 login form)
-#    GET    /auth/me
-#    GET    /health
-#    POST   /files/upload
-#    GET    /files
-#    GET    /files/{id}/status
-#    GET    /files/{id}/download
-#    DELETE /files/{id}
-#    POST   /files/{id}/comments
-#    DELETE /files/{id}/comments/{cid}
-# ─────────────────────────────────────────────────────────────────
+# FastAPI backend: auth, file upload, conversion jobs, and file listing.
+# All file/comment access is scoped to the logged-in user.
 
 import os
 import uuid
@@ -48,7 +26,7 @@ from pydantic import BaseModel, field_validator
 from models import Base, User, FileRecord, Comment, SecurityLog
 from converters import SUPPORTED_CONVERSIONS, handle_conversion
 
-# ── Configuration ──────────────────────────────────────────────────────────────
+# App settings (env vars or defaults)
 SECRET_KEY  = os.getenv("SECRET_KEY", "dev-secret-change-me")
 ALGORITHM   = "HS256"
 TOKEN_TTL   = 60 * 24          # minutes (24 hours)
@@ -57,11 +35,11 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////app/db/convertflow.db")
 UPLOAD_DIR   = Path("/app/uploads")
 OUTPUT_DIR   = Path("/app/outputs")
 
-# Ensure required directories exist at startup
+# Create upload, output, and db folders if missing
 for d in [UPLOAD_DIR, OUTPUT_DIR, Path("/app/db")]:
     d.mkdir(parents=True, exist_ok=True)
 
-# Allowed file extensions (by type, not MIME)
+# Only these extensions are accepted for upload
 ALLOWED_EXTENSIONS = {
     "pdf",
     "docx",
@@ -73,16 +51,16 @@ ALLOWED_EXTENSIONS = {
 }
 MAX_FILE_SIZE_MB   = 50
 
-# ── Database ───────────────────────────────────────────────────────────────────
+# Database connection and session
 engine       = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)   # Create tables on startup
+Base.metadata.create_all(bind=engine)
 
-# ── Security ───────────────────────────────────────────────────────────────────
+# Password hashing and JWT auth
 pwd_context    = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme  = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
-# ── App ────────────────────────────────────────────────────────────────────────
+# FastAPI app and CORS
 app = FastAPI(
     title="ConvertFlow API",
     version="1.0.0",
@@ -98,8 +76,7 @@ app.add_middleware(
 )
 
 
-# ── Pydantic Schemas ───────────────────────────────────────────────────────────
-
+# Request/response shapes for the API
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -163,8 +140,7 @@ class FileOut(BaseModel):
         from_attributes = True
 
 
-# ── Database Dependency ────────────────────────────────────────────────────────
-
+# Inject a DB session into route handlers
 def get_db():
     db = SessionLocal()
     try:
@@ -173,8 +149,7 @@ def get_db():
         db.close()
 
 
-# ── Auth Helpers ───────────────────────────────────────────────────────────────
-
+# Password hashing, JWT creation, current-user lookup, and security logging
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
@@ -234,15 +209,13 @@ def _client_ip(request: Request) -> str:
     return fwd.split(",")[0].strip() if fwd else request.client.host
 
 
-# ── Health Check ───────────────────────────────────────────────────────────────
-
+# Simple health check for load balancers
 @app.get("/health", tags=["System"])
 def health():
     return {"status": "ok", "service": "ConvertFlow API"}
 
 
-# ── Auth Endpoints ─────────────────────────────────────────────────────────────
-
+# Register a new user and return a JWT
 @app.post("/auth/register", response_model=Token, tags=["Auth"])
 def register(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
     """
@@ -299,8 +272,7 @@ def get_me(current_user: User = Depends(get_current_user)):
     return {"username": current_user.username, "session_id": current_user.session_id}
 
 
-# ── File Upload & Conversion ───────────────────────────────────────────────────
-
+# Upload a file and start conversion in the background
 @app.post("/files/upload", tags=["Files"])
 async def upload_file(
     background_tasks: BackgroundTasks,
@@ -330,19 +302,19 @@ async def upload_file(
             detail=f"Conversion from .{ext} to .{target} is not supported.",
         )
 
-    # Read file bytes and check size
+    # Check file size limit
     contents = await file.read()
     if len(contents) > MAX_FILE_SIZE_MB * 1024 * 1024:
         raise HTTPException(status_code=413, detail=f"File exceeds {MAX_FILE_SIZE_MB} MB limit")
 
-    # Write to disk with a safe, UUID-based name
+    # Save file with a unique name (no user-controlled path)
     stored_filename = f"{current_user.session_id}_{uuid.uuid4()}.{ext}"
     file_path       = UPLOAD_DIR / stored_filename
 
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    # Create DB record
+    # Store file metadata and queue conversion
     record = FileRecord(
         original_filename = file.filename,
         stored_filename   = stored_filename,
@@ -356,7 +328,7 @@ async def upload_file(
 
     _log(db, "FILE_UPLOADED", current_user.username, detail=f"id={record.id} ext={ext}")
 
-    # Start conversion in the background so the upload response is instant
+    # Run conversion in a background task
     background_tasks.add_task(_run_conversion, record.id, ext, target, stored_filename)
 
     return {"id": record.id, "status": "pending", "message": "Upload successful — conversion started"}
@@ -393,7 +365,7 @@ def _run_conversion(file_id: int, file_type: str, target_format: str, stored_fil
         db.close()
 
 
-# ── File Listing & Management ──────────────────────────────────────────────────
+# List, download, or delete the current user's files
 
 @app.get("/files", response_model=List[FileOut], tags=["Files"])
 def list_files(
@@ -496,12 +468,12 @@ def delete_file(
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Remove original upload
+    # Delete the uploaded file from disk
     upload = UPLOAD_DIR / record.stored_filename
     if upload.exists():
         upload.unlink()
 
-    # Remove converted output
+    # Delete the converted file from disk
     if record.converted_filename:
         output = OUTPUT_DIR / record.converted_filename
         if output.exists():
@@ -512,7 +484,7 @@ def delete_file(
     return {"message": "File deleted"}
 
 
-# ── Comments / Notes ───────────────────────────────────────────────────────────
+# Add or remove notes on a file
 
 @app.post("/files/{file_id}/comments", response_model=CommentOut, tags=["Comments"])
 def add_comment(
